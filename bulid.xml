@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="math" basedir="." xmlns:jacoco="antlib:org.jacoco.ant"
+	default="junit">
+	<!--预定义的属性和 classpath -->
+	<property name="src.dir" value="src" />
+	<property name="test.dir" value="test" />
+	<property name="build.dir" value="build" />
+	<property name="classes.dir" value="${build.dir}/classes" />
+	<property name="tests.dir" value="${build.dir}/tests" />
+	<property name="jar.dir" value="${build.dir}/jar" />
+	<property name="lib.dir" value="lib" />
+
+	<path id="classpath">
+		<fileset dir="${lib.dir}" includes="**/*.jar" />
+	</path>
+
+	<!--清除上次构建 -->
+	<target name="clean">
+		<delete dir="${build.dir}" />
+	</target>
+
+	<!--编译代码，包括单元测试 -->
+	<target name="compile" depends="clean">
+		<mkdir dir="${classes.dir}" />
+		<mkdir dir="${tests.dir}" />
+		<javac srcdir="${src.dir}" destdir="${classes.dir}" />
+		<javac srcdir="${test.dir}" destdir="${tests.dir}">
+			<classpath>
+				<path refid="classpath" />
+				<path location="${classes.dir}" />
+			</classpath>
+		</javac>
+	</target>
+
+	<!--打包 -->
+	<target name="jar" depends="compile">
+		<mkdir dir="${jar.dir}" />
+		<jar destfile="${jar.dir}/${ant.project.name}.jar" basedir="${classes.dir}">
+		</jar>
+	</target>
+
+	<!--运行单元测试 -->
+	<target name="junit" depends="jar">
+		<junit printsummary="yes">
+			<classpath>
+				<path refid="classpath" />
+				<path location="${classes.dir}" />
+				<path location="${tests.dir}" />
+			</classpath>
+			<batchtest fork="yes">
+				<fileset dir="${test.dir}" includes="**/*Test.java" />
+			</batchtest>
+		</junit>
+	</target>
+	<taskdef uri="antlib:org.jacoco.ant" resource="org/jacoco/ant/antlib.xml">
+		<classpath refid="classpath" />
+	</taskdef>
+	<jacoco:coverage destfile="${build.dir}/jacoco.exec">
+		<junit fork="true" forkmode="once" printsummary="yes">
+			<classpath>
+				<path refid="classpath" />
+				<path location="${classes.dir}" />
+				<path location="${tests.dir}" />
+			</classpath>
+			<batchtest fork="yes">
+				<fileset dir="${test.dir}" includes="**/*Test.java" />
+			</batchtest>
+		</junit>
+	</jacoco:coverage>
+
+	<jacoco:report>
+		<executiondata>
+			<file file="${build.dir}/jacoco.exec" />
+		</executiondata>
+		<structure name="dw demo">
+			<classfiles>
+				<fileset dir="${classes.dir}" />
+			</classfiles>
+			<sourcefiles encoding="UTF-8">
+				<fileset dir="${src.dir}" />
+			</sourcefiles>
+		</structure>
+		<html destdir="${build.dir}" />
+	</jacoco:report>
+</project>
